@@ -1,0 +1,38 @@
+Using device: cuda
+Epoch    0 | Loss: 0.005641 | LR: 1.00e-04 | Time: 0.1min
+Saved best model at epoch 0 with loss: 0.005641
+Epoch   50 | Loss: 0.000420 | LR: 5.71e-04 | Time: 2.4min
+Saved best model at epoch 50 with loss: 0.000420
+Epoch  100 | Loss: 0.000329 | LR: 1.00e-03 | Time: 5.0min
+Saved best model at epoch 100 with loss: 0.000329
+Epoch  150 | Loss: 0.000170 | LR: 9.92e-04 | Time: 7.5min
+Saved best model at epoch 150 with loss: 0.000170
+Epoch  200 | Loss: 0.000108 | LR: 9.69e-04 | Time: 10.1min
+Saved best model at epoch 200 with loss: 0.000108
+Epoch  250 | Loss: 0.000072 | LR: 9.31e-04 | Time: 12.4min
+Saved best model at epoch 250 with loss: 0.000072
+Epoch  300 | Loss: 0.000065 | LR: 8.81e-04 | Time: 14.8min
+Saved best model at epoch 300 with loss: 0.000065
+Epoch  350 | Loss: 0.000074 | LR: 8.19e-04 | Time: 17.1min
+Epoch  400 | Loss: 0.000052 | LR: 7.47e-04 | Time: 19.4min
+Saved best model at epoch 400 with loss: 0.000052
+Epoch  450 | Loss: 0.000039 | LR: 6.68e-04 | Time: 21.7min
+Saved best model at epoch 450 with loss: 0.000039
+Epoch  500 | Loss: 0.000035 | LR: 5.84e-04 | Time: 24.0min
+Saved best model at epoch 500 with loss: 0.000035
+Epoch  550 | Loss: 0.000029 | LR: 4.97e-04 | Time: 26.3min
+Saved best model at epoch 550 with loss: 0.000029
+Epoch  600 | Loss: 0.000031 | LR: 4.10e-04 | Time: 28.6min
+Epoch  650 | Loss: 0.000029 | LR: 3.26e-04 | Time: 30.9min
+Epoch  700 | Loss: 0.000026 | LR: 2.48e-04 | Time: 33.2min
+Saved best model at epoch 700 with loss: 0.000026
+Epoch  750 | Loss: 0.000023 | LR: 1.77e-04 | Time: 35.6min
+Saved best model at epoch 750 with loss: 0.000023
+Epoch  800 | Loss: 0.000023 | LR: 1.16e-04 | Time: 37.9min
+Saved best model at epoch 800 with loss: 0.000023
+Epoch  850 | Loss: 0.000020 | LR: 6.62e-05 | Time: 40.2min
+Saved best model at epoch 850 with loss: 0.000020
+Epoch  900 | Loss: 0.000021 | LR: 2.99e-05 | Time: 42.5min
+Epoch  950 | Loss: 0.000019 | LR: 7.99e-06 | Time: 44.8min
+Saved best model at epoch 950 with loss: 0.000019
+Epoch  999 | Loss: 0.000020 | LR: 1.00e-06 | Time: 47.1min

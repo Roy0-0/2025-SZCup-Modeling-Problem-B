@@ -1,0 +1,147 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import numpy as np
+import matplotlib.pyplot as plt
+from torch.utils.data import DataLoader, TensorDataset
+
+
+# -------------------- 1. 数据生成 --------------------
+def generate_bt2020_samples(n=10000):
+    primaries = np.array([
+        [0.708, 0.292],  # Red
+        [0.170, 0.797],  # Green
+        [0.131, 0.046]  # Blue
+    ])
+
+    weights = np.random.dirichlet([1, 1, 1], size=n)
+
+    def xyY_to_XYZ(x, y, Y=1.0):
+        X = (x / y) * Y
+        Z = ((1 - x - y) / y) * Y
+        return np.column_stack([X, np.full_like(X, Y), Z])
+
+    XYZ_samples = weights @ xyY_to_XYZ(primaries[:, 0], primaries[:, 1])
+    XYZ_normalized = (XYZ_samples - XYZ_samples.min(0)) / (XYZ_samples.max(0) - XYZ_samples.min(0))
+    return torch.tensor(XYZ_normalized, dtype=torch.float32)
+
+
+# -------------------- 2. 颜色转换矩阵 --------------------
+def get_srgb_matrix():
+    srgb_primaries = np.array([
+        [0.64, 0.33],
+        [0.30, 0.60],
+        [0.15, 0.06]
+    ])
+    white_point = np.array([0.3127, 0.3290])
+
+    def xy_to_XYZ(x, y):
+        y = max(y, 1e-6)
+        return np.array([x / y, 1.0, (1 - x - y) / y])
+
+    Xr, Xg, Xb = xy_to_XYZ(*srgb_primaries[0]), xy_to_XYZ(*srgb_primaries[1]), xy_to_XYZ(*srgb_primaries[2])
+    Xw = xy_to_XYZ(*white_point)
+
+    RGB = np.stack([Xr, Xg, Xb], axis=1)
+    S = np.linalg.inv(RGB) @ Xw
+    M = RGB @ np.diag(S)
+    return torch.tensor(M, dtype=torch.float32)
+
+
+M_RGB2XYZ = get_srgb_matrix()
+
+
+def rgb_to_xyz(rgb):
+    return rgb @ M_RGB2XYZ.T
+
+
+# -------------------- 3. 神经网络模型 --------------------
+class ColorNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(3, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 3),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+# -------------------- 4. 训练流程 --------------------
+def train_model():
+    # 数据准备
+    XYZ_data = generate_bt2020_samples(20000)
+    train_loader = DataLoader(TensorDataset(XYZ_data), batch_size=1024, shuffle=True)
+
+    # 模型初始化
+    model = ColorNet()
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+    # 训练循环
+    for epoch in range(2000):
+        model.train()
+        total_loss = 0
+        for batch in train_loader:
+            XYZ = batch[0]
+            optimizer.zero_grad()
+
+            RGB_pred = model(XYZ)
+            XYZ_pred = rgb_to_xyz(RGB_pred)
+
+            # 简化损失计算
+            loss = torch.mean((XYZ_pred - XYZ).pow(2))
+
+            loss.backward()
+            # 梯度裁剪应该在反向传播之后、优化器步骤之前
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        avg_loss = total_loss / len(train_loader)
+        if epoch % 100 == 0:
+            print(f"Epoch {epoch}: Loss={avg_loss:.6f}")
+
+        # 提前停止条件
+        #if avg_loss < 0.01:
+         #   print(f"达到目标损失值 {avg_loss:.6f}，提前停止")
+          #  break
+
+    return model
+
+
+# -------------------- 5. 可视化 --------------------
+def visualize_results(model):
+    with torch.no_grad():
+        test_data = generate_bt2020_samples(1000)
+        RGB_pred = model(test_data)
+        XYZ_pred = rgb_to_xyz(RGB_pred)
+
+        def to_xy(XYZ):
+            sum_XYZ = XYZ.sum(dim=1, keepdim=True) + 1e-6
+            return XYZ[:, :2] / sum_XYZ
+
+        xy_input = to_xy(test_data)
+        xy_pred = to_xy(XYZ_pred)
+
+        plt.figure(figsize=(12, 6))
+        plt.scatter(xy_input[:, 0], xy_input[:, 1], s=5, c='blue', alpha=0.3, label="Input")
+        plt.scatter(xy_pred[:, 0], xy_pred[:, 1], s=5, c=RGB_pred, alpha=0.3, label="Predicted")
+        plt.title("Chromaticity Comparison")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.legend()
+        plt.savefig("result.png", dpi=150)
+        plt.show()
+
+
+# -------------------- 主程序 --------------------
+if __name__ == "__main__":
+    model = train_model()
+    torch.save(model.state_dict(), "color_mapper.pth")
+    visualize_results(model)
